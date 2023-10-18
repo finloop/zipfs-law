@@ -2,6 +2,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 import networkx as nx
+import math
 
 from .parse import count_tokens, count_to_dataframe
 
@@ -21,7 +22,7 @@ def generate_nx_graph(tokens: list[str]) -> nx.Graph:
     G = nx.Graph()
     G.add_nodes_from(nodes)
     G.add_edges_from(edges)
-    pos = nx.spring_layout(G)
+    pos = nx.spring_layout(G, k=5/math.sqrt(G.order()))
     nx.set_node_attributes(G, pos, "pos")
     # Add text to nodes
     for node in G.nodes:
@@ -58,12 +59,21 @@ def network(tokens: list[str]):
         x, y = G.nodes[node]["pos"]
         node_x.append(x)
         node_y.append(y)
+        
+    node_sizes = []
+    for node, adjacencies in enumerate(G.adjacency()):
+        node_sizes.append(len(adjacencies[1])*2)
+        
+        
+    edge_width = []
+    for edge in G.edges():
+        edge_width.append(2)
 
     node_trace = go.Scatter(
         x=node_x,
         y=node_y,
-        mode="markers+text",
-        #hoverinfo="text",
+        mode="markers",
+        hoverinfo="text",
         marker=dict(
             showscale=True,
             # colorscale options
@@ -73,14 +83,14 @@ def network(tokens: list[str]):
             colorscale="YlGnBu",
             reversescale=True,
             color=[],
-            size=10,
+            size=node_sizes,
             colorbar=dict(
                 thickness=15,
                 title="Liczba sąsiadów",
                 xanchor="left",
                 titleside="right",
             ),
-            line_width=2,
+            line_width=edge_width,
         ),
         textposition="top center",
     )

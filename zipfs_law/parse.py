@@ -29,7 +29,7 @@ def clean(text: str) -> str:
     Returns:
         str: The cleaned text.
     """
-    regex = re.compile(r'[^a-zA-Z\s]')
+    regex = re.compile(r'[^a-zA-Z\sAaĄąBbCcĆćDdEeĘęFfGgHhIiJjKkLlŁłMmNnŃńOoÓóPpRrSsŚśTtUuWwYyZzŹźŻż]')
     
     return regex.sub('', text).lower()
 
