@@ -2,6 +2,7 @@
 """
 from collections import Counter
 import pandas as pd
+import re
 
 def split(text: str, words=True) -> list[str]:
     """Split a string into a list of words/letters.
@@ -20,7 +21,7 @@ def split(text: str, words=True) -> list[str]:
         return list(text)
 
 def clean(text: str) -> str:
-    """Clean a string of text by removing punctuation and converting to lowercase.
+    """Clean a string of text by removing all non-letter characters and converting to lowercase.
     
     Args:
         text (str): The text to clean.
@@ -28,9 +29,9 @@ def clean(text: str) -> str:
     Returns:
         str: The cleaned text.
     """
-    punctuation = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
+    regex = re.compile(r'[^a-zA-Z\s]')
     
-    return text.lower().translate(str.maketrans('', '', punctuation))
+    return regex.sub('', text).lower()
 
 def count_tokens(tokens: list[str]) -> dict[str, int]:
     """Count the number of times each token appears in a list of tokens.
@@ -44,7 +45,7 @@ def count_tokens(tokens: list[str]) -> dict[str, int]:
     counts = Counter(tokens)
     return dict(counts)
 
-def histogram(counts: dict[str,int]) -> pd.DataFrame:
+def count_to_dataframe(counts: dict[str,int]) -> pd.DataFrame:
     """Convert a dictionary of token counts to a pandas DataFrame."""
     colnames = ['token', 'count']
     df = pd.DataFrame(counts.items(), columns=colnames)
