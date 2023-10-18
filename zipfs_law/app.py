@@ -1,18 +1,20 @@
 import streamlit as st
 
-from zipfs_law.parse import split, clean, count_tokens, histogram
-from zipfs_law.graphs import plot_zipfs_law
+from zipfs_law.graphs import histogram, network
+from zipfs_law.parse import split, clean
 
 config = {'displayModeBar': False}
+st.set_page_config(layout="wide")
 
-text = """
-If you have set up the virtual env that you want already, take care that it is activated when you run the install command. If you don't, poetry will try to create a new virtual env and use that, which is probably not what you want.
-"""
+text = st.text_area("Tekst do przeanalizowania", "Wpisz tekst do analizy")
+tokens = split(clean(text))
 
-text = clean(text)
-tokens = split(text, words=True)
-token_counts = count_tokens(tokens)
-df = histogram(token_counts)
-fig = plot_zipfs_law(df)
+cols = st.columns(2)
 
-st.plotly_chart(fig,config=config)
+with cols[0]:
+    barchart_fig = histogram(tokens)
+    st.plotly_chart(barchart_fig,config=config, use_container_width=True)
+
+with cols[1]:
+    network_fig = network(tokens)
+    st.plotly_chart(network_fig,config=config, use_container_width=True)
