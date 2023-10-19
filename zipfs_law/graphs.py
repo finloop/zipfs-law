@@ -1,10 +1,10 @@
 import plotly.express as px
-import plotly.graph_objects as go
+from pyvis.network import Network
 import pandas as pd
 import networkx as nx
-import math
-
+from collections import Counter
 from .parse import count_tokens, count_to_dataframe
+import math
 
 def barchart(df: pd.DataFrame):
     if not set(("count", "token")).issubset(set(df.columns)):
@@ -19,106 +19,57 @@ def barchart(df: pd.DataFrame):
 def generate_nx_graph(tokens: list[str]) -> nx.Graph:
     nodes = list(set(tokens))
     edges = [(tokens[i], tokens[i + 1]) for i in range(len(tokens) - 1)]
+    edge_counter = Counter(edges)
+    print(edge_counter)
+    
     G = nx.Graph()
     G.add_nodes_from(nodes)
-    G.add_edges_from(edges)
-    pos = nx.spring_layout(G, k=5/math.sqrt(G.order()))
-    nx.set_node_attributes(G, pos, "pos")
+    
+    for edge in edge_counter:
+        G.add_edge(edge[0], edge[1], weight=edge_counter[edge]*10)
+    
     # Add text to nodes
     for node in G.nodes:
         G.nodes[node]["text"] = node
+        
+    # Add size to nodes
+    scale = 10
+    d = dict(G.degree)
+    d = {k: v * scale for k, v in d.items()}
+    nx.set_node_attributes(G, d, "size")
+    print(G.edges.data())
+        
     return G
 
 
 def network(tokens: list[str]):
     G: nx.Graph = generate_nx_graph(tokens)
 
-    edge_x = []
-    edge_y = []
-    for edge in G.edges():
-        x0, y0 = G.nodes[edge[0]]["pos"]
-        x1, y1 = G.nodes[edge[1]]["pos"]
-        edge_x.append(x0)
-        edge_x.append(x1)
-        edge_x.append(None)
-        edge_y.append(y0)
-        edge_y.append(y1)
-        edge_y.append(None)
+    nt = Network("450px", "100%")
+    nt.from_nx(G)
+    
+    # Generate network with specific layout settings
+    nt.repulsion(
+                        node_distance=420,
+                        central_gravity=0.33,
+                        spring_length=110,
+                        spring_strength=0.10,
+                        damping=0.95
+                       )
+    # Save and read graph as HTML file (on Streamlit Sharing)
+    try:
+        path = '/tmp'
+        nt.save_graph(f'{path}/pyvis_graph.html')
+        HtmlFile = open(f'{path}/pyvis_graph.html', 'r', encoding='utf-8')
 
-    edge_trace = go.Scatter(
-        x=edge_x,
-        y=edge_y,
-        line=dict(width=0.5, color="#888"),
-        hoverinfo="none",
-        mode="lines",
-    )
+    # Save and read graph as HTML file (locally)
+    except:
+        path = '/html_files'
+        nt.save_graph(f'{path}/pyvis_graph.html')
+        HtmlFile = open(f'{path}/pyvis_graph.html', 'r', encoding='utf-8')
 
-    node_x = []
-    node_y = []
-    for node in G.nodes():
-        x, y = G.nodes[node]["pos"]
-        node_x.append(x)
-        node_y.append(y)
-        
-    node_sizes = []
-    for node, adjacencies in enumerate(G.adjacency()):
-        node_sizes.append(len(adjacencies[1])*2)
-        
-        
-    edge_width = []
-    for edge in G.edges():
-        edge_width.append(2)
-
-    node_trace = go.Scatter(
-        x=node_x,
-        y=node_y,
-        mode="markers",
-        hoverinfo="text",
-        marker=dict(
-            showscale=True,
-            # colorscale options
-            #'Greys' | 'YlGnBu' | 'Greens' | 'YlOrRd' | 'Bluered' | 'RdBu' |
-            #'Reds' | 'Blues' | 'Picnic' | 'Rainbow' | 'Portland' | 'Jet' |
-            #'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
-            colorscale="YlGnBu",
-            reversescale=True,
-            color=[],
-            size=node_sizes,
-            colorbar=dict(
-                thickness=15,
-                title="Liczba sąsiadów",
-                xanchor="left",
-                titleside="right",
-            ),
-            line_width=edge_width,
-        ),
-        textposition="top center",
-    )
-
-    node_adjacencies = []
-    node_text = []
-    for node, adjacencies in enumerate(G.adjacency()):
-        node_adjacencies.append(len(adjacencies[1]))
-        node_label =  G.nodes[adjacencies[0]]["text"]
-        node_text.append(node_label)
-
-    node_trace.marker.color = node_adjacencies
-    node_trace.text = node_text
-
-    fig = go.Figure(
-        data=[edge_trace, node_trace],
-        layout=go.Layout(
-            title="<br>Graf zależności między słowami",
-            titlefont_size=16,
-            showlegend=False,
-            hovermode="closest",
-            margin=dict(b=20, l=5, r=5, t=40),
-            xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-            yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-        ),
-    )
-
-    return fig
+    # Load HTML file in HTML component for display on Streamlit page
+    return HtmlFile.read()
 
 
 def histogram(tokens: list[str]):
