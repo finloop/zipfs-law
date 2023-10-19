@@ -12,7 +12,7 @@ def barchart(df: pd.DataFrame):
     df = df.sort_values("count", ascending=False)
     # Disable control panel
     # https://plotly.com/python/configuration-options/
-    fig = px.bar(df, x="token", y="count", log_y=True, title="Prawo Zipfa", labels={"token": "Słowo", "count": "Liczba wystąpień"})
+    fig = px.bar(df, x="token", y="count", log_y=True, labels={"token": "Słowo", "count": "Liczba wystąpień"})
     return fig
 
 
@@ -42,8 +42,14 @@ def generate_nx_graph(tokens: list[str]) -> nx.Graph:
     return G
 
 
-def network(tokens: list[str]):
+def network(tokens: list[str], prune: bool=False):
     G: nx.Graph = generate_nx_graph(tokens)
+    
+    # Prune graph
+    if prune:
+        # Remove nodes with degree less than 3
+        nodes_to_remove = [node for node in G.nodes if G.degree[node] < 3]
+        G.remove_nodes_from(nodes_to_remove)
 
     nt = Network("450px", "100%")
     nt.from_nx(G)
