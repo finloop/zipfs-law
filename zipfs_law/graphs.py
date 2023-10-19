@@ -59,8 +59,8 @@ def network(tokens: list[str], prune: bool=False):
                         node_distance=420,
                         central_gravity=0.33,
                         spring_length=110,
-                        spring_strength=0.10,
-                        damping=0.95
+                        spring_strength=0.70,
+                        damping=0.35
                        )
     # Save and read graph as HTML file (on Streamlit Sharing)
     try:
