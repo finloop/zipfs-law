@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "zipfs_law"}]
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.13"
+python = ">3.9.7,<3.10"
 pandas = "^2.1.1"
 plotly = "^5.17.0"
 streamlit = "^1.27.2"
