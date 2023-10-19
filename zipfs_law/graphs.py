@@ -5,6 +5,7 @@ import networkx as nx
 from collections import Counter
 from .parse import count_tokens, count_to_dataframe
 import math
+import numpy as np
 
 def barchart(df: pd.DataFrame):
     if not set(("count", "token")).issubset(set(df.columns)):
@@ -16,7 +17,7 @@ def barchart(df: pd.DataFrame):
     return fig
 
 
-def generate_nx_graph(tokens: list[str]) -> nx.Graph:
+def generate_nx_graph(tokens: list[str], prune=False) -> nx.Graph:
     nodes = list(set(tokens))
     edges = [(tokens[i], tokens[i + 1]) for i in range(len(tokens) - 1)]
     edge_counter = Counter(edges)
@@ -27,6 +28,13 @@ def generate_nx_graph(tokens: list[str]) -> nx.Graph:
     
     for edge in edge_counter:
         G.add_edge(edge[0], edge[1], weight=edge_counter[edge]*10)
+        
+    # Prune graph
+    if prune:
+        # Remove nodes with degree less than 3
+        nodes_to_remove = [node for node in G.nodes if G.degree[node] < 3]
+        G.remove_nodes_from(nodes_to_remove)
+
     
     # Add text to nodes
     for node in G.nodes:
@@ -43,14 +51,8 @@ def generate_nx_graph(tokens: list[str]) -> nx.Graph:
 
 
 def network(tokens: list[str], prune: bool=False):
-    G: nx.Graph = generate_nx_graph(tokens)
+    G: nx.Graph = generate_nx_graph(tokens, prune=prune)
     
-    # Prune graph
-    if prune:
-        # Remove nodes with degree less than 3
-        nodes_to_remove = [node for node in G.nodes if G.degree[node] < 3]
-        G.remove_nodes_from(nodes_to_remove)
-
     nt = Network("450px", "100%")
     nt.from_nx(G)
     
@@ -82,4 +84,10 @@ def histogram(tokens: list[str]):
     token_counts = count_tokens(tokens)
     df = count_to_dataframe(token_counts)
     fig = barchart(df)
-    return fig
+    return fig, df
+
+def histogram_log(df: pd.DataFrame):
+    df["Liczba wystąpień [log]"] = df["Liczba wystąpień"].apply(math.log)
+    df["index"] = np.log(df.index+1)
+    fig = px.scatter(df, x="index", y="Liczba wystąpień [log]", labels={"index": "Ranga [log]", "Liczba wystąpień [log]": "Liczba wystąpień [log]"})
+    return fig, df
