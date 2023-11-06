@@ -33,7 +33,7 @@ text = st.text_area("Wpisz do przeanalizowania", "Prawo Zipfa mówi, że w tekś
 
 st.write("lub wybierz jeden z poniższej listy")
 
-select_result = st.selectbox("Tekst do analizy", ["","Pan Tadeusz", "Latarnik"])
+select_result = st.selectbox("Tekst do analizy", ["","Pan Tadeusz", "Latarnik", "Model małpy uderzającej w klawiaturę"])
 
 if select_result != "":
     if select_result == "Pan Tadeusz":
@@ -41,6 +41,9 @@ if select_result != "":
             text = f.read()
     if select_result == "Latarnik":
         with open("latarnik.txt", "r", encoding="utf-8") as f:
+            text = f.read()
+    if select_result == "Model małpy uderzającej w klawiaturę":
+        with open("model-malpy.txt", "r", encoding="utf-8") as f:
             text = f.read()
 
 tokens = split(clean(text[:int(len(text) * prc / 100)]))
@@ -70,3 +73,9 @@ with cols[1]:
         network_html = network(tokens, prune=prune_network)
         components.html(network_html, height=1200)
 
+st.write("## Inne miejsca, gdzie prawo Zipfa może zachodzić")
+st.write("### Teksty w języku angielskim")
+st.image("zipfs-law-eng.png", width=1000)
+
+st.image("zipfs-law-unix.png", width=1000)
+st.write("*Źródło: https://home.ipipan.waw.pl/l.debowski/docs/seminaria/zipf3.pdf*")
